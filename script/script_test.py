@@ -1,0 +1,222 @@
+import os
+
+import imageio
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
+from torchvision.utils import make_grid, save_image
+import matplotlib.pyplot as plt
+
+from app.dataset import load_data_and_split
+from app.context_unet import ContextUnet
+from app.ddpm import DDPM
+
+def recall_and_regenerate_edward_test(
+    checkpoint_path, 
+    dataset, 
+    device="cuda",
+    guidew=2.0, #, 0.5, 2.0 ,5.0, 20.0], 
+    conditions_size_list = np.arange(5, 11, 1), #np.arange(5, 56, 5),
+    save_dir="recall_images"
+):
+
+    # Set CUDA memory allocation config
+    # os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True' # Unregonized config
+    
+    # Clear cached GPU memory
+    torch.cuda.empty_cache()
+
+    # Ensure save directory exists
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Load the checkpoint on CPU first
+    try:
+        checkpoint = torch.load(checkpoint_path, map_location='cpu')
+        print("Checkpoint loaded on CPU.")
+    except RuntimeError as e:
+        print("Error loading checkpoint:", e)
+        return
+
+    # Initialize the model
+    nn_model = ContextUnet(
+        in_channels=1,       # Adjust if different
+        n_feat=256,          # Must match the trained model
+        condition_dim=3136, # Must match the trained model
+    )
+
+    # Initialize the DDPM
+    betas = (1e-4, 0.02)  # Adjust these values if needed
+    n_T = 400             # Number of timesteps, adjust as necessary
+    ddpm = DDPM(nn_model, betas, n_T, device)
+
+    # Load the state dict
+    try:
+        ddpm.load_state_dict(checkpoint['model_state_dict'])
+        print("State dict loaded successfully on CPU.")
+    except RuntimeError as e:
+        print("Error loading state_dict:", e)
+        # Handle nested keys if necessary
+        # Example: Strip 'nn_model.' prefix
+        state_dict = checkpoint['model_state_dict']
+        new_state_dict = {}
+        for key, value in state_dict.items():
+            if key.startswith('nn_model.'):
+                new_key = key[len('nn_model.'):]
+                new_state_dict[new_key] = value
+            else:
+                new_state_dict[key] = value
+        ddpm.load_state_dict(new_state_dict, strict=False)
+        print("State dict loaded with strict=False on CPU.")
+
+    # Move the model to GPU
+    ddpm = ddpm.to(device)
+    ddpm.eval()
+
+    # Clear cached GPU memory again
+    torch.cuda.empty_cache()
+
+    # Create a DataLoader for the dataset
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
+
+    # Select samples from the dataset
+    selected_samples = []
+    for i, data in enumerate(dataloader):
+
+        image, condition, mask = data
+        # Move tensors to CPU first to minimize GPU memory usage
+        image = image.to('cpu')
+        condition = condition.to('cpu')
+        mask = mask.to('cpu')
+        selected_samples.append((image, condition, mask))
+        # Optional: Limit the number of samples to prevent excessive memory usage
+        # For example, select only 10 samples
+        if i >= 2:
+            break
+
+    # Iterate over each selected sample
+    for sample_idx, (original_image, condition, original_mask) in enumerate(selected_samples):
+        if sample_idx != 2: # only do for the 3rd sample for now
+            continue
+        # Move tensors to GPU as needed
+        original_image = original_image.to(device)
+        original_mask = original_mask.to(device)
+        original_condition = original_image
+
+        print(f"Sample {sample_idx}: Original Mask Sum: {torch.sum(original_mask)}")
+        if torch.sum(original_condition) < 10:
+            print(f"Skipping sample {sample_idx} due to low pixel intensity.")
+            continue
+
+        # Iterate over each condition size
+        all_images = []
+        mask = torch.zeros_like(original_condition, dtype=torch.float32)
+        for condition_size in conditions_size_list:
+            print(f"  Regenerating with condition size = {condition_size} for sample {sample_idx}")
+            condition = original_condition.clone().to('cpu') # Copy original condition
+            mask = mask.to('cpu') # to cpu for numpy operations
+
+            # # Randomly select nth largest pixels to set to 1
+            # condition_flat = condition.flatten()
+            # n_largest_indices = np.argpartition(condition_flat, -condition_size)[-condition_size:]
+            # mask_flat = mask.flatten()
+            # mask_flat[n_largest_indices] = 1
+            # mask = mask_flat.reshape(condition.shape)
+
+            # # Randomly select non-zero pixels to set to 1
+            # condition_flat = condition.flatten()
+            # non_zero_indices = np.where(condition_flat > 0)[0]
+            # selected_indices = np.random.choice(non_zero_indices, condition_size, replace=False)
+            # mask_flat = mask.flatten()
+            # mask_flat[selected_indices] = 1
+            # mask = mask_flat.reshape(condition.shape)
+
+            # Randomly select more pixels to set to 1
+            condition_flat = condition.flatten()
+            mask_flat = mask.flatten()
+            existing_indices = np.where(mask_flat > 0)[0]
+            non_zero_indices = np.where(condition_flat > 0)[0]
+            new_non_zero_indices = np.setdiff1d(non_zero_indices, existing_indices)
+            new_selected_indices = np.random.choice(new_non_zero_indices, condition_size - len(existing_indices), replace=False)
+            combined_indices = np.concatenate((existing_indices, new_selected_indices))
+
+            mask_flat[combined_indices] = 1
+            mask = mask_flat.reshape(condition.shape)
+
+            #print number of 1s in mask
+            # print(f"  Number of 1s in mask: {torch.sum(mask)}")
+
+            # Move tensors to GPU as needed
+            # mask = torch.tensor(mask, dtype=torch.float32).to(device)
+            mask = mask.to(device)
+            condition = condition.to(device)
+
+            # Generate new sample
+            x_gen, _ = ddpm.sample(
+                n_sample=1, 
+                condition=condition,  # Use masked condition
+                mask=mask,
+                device=device, 
+                guide_w=guidew
+            )
+
+            # Move tensors to CPU and remove batch dimension for visualization
+            x_gen_cpu = x_gen.cpu().squeeze(0)
+            condition_cpu = condition.cpu().squeeze(0)
+            mask_cpu = mask.cpu().squeeze(0)
+
+            # **Append Generated Samples**
+            all_images.append(x_gen_cpu)
+
+            # **Append Condition Image and Ground Truth**
+            all_images.append(condition_cpu * mask_cpu)  # Masked condition image
+            all_images.append(original_image.cpu().squeeze(0))
+
+        images_per_row = 3  # 1 generated sample + condition + ground truth
+
+        all_images_inverted = [img * -1 + 1 for img in all_images]
+        grid = make_grid(all_images_inverted, nrow=images_per_row, padding=2, normalize=False)
+        
+       # **Save the grid image**, each row corresponds to a different condition size
+        save_path = os.path.join(save_dir, f"sample_{sample_idx}_condition_size.png")
+        save_image(grid, save_path)
+        print(f"  Saved recall image for sample {sample_idx} with condition size at {save_path}")
+
+        # Save the grid image with a colormap
+        save_path_color = f"{save_path[:-4]}_color.png"
+        # grid_np = np.array(all_images).reshape(-1, images_per_row, 56, 56)
+        grid_np = np.array([img.numpy() for img in all_images]).reshape(-1, images_per_row, 56, 56)
+        grid_np = (grid_np - grid_np.min()) / (grid_np.max() - grid_np.min())
+
+        fig, axs = plt.subplots(grid_np.shape[0], grid_np.shape[1], figsize=(20, 20))
+        gif_images = []
+        for i in range(grid_np.shape[0]):
+            gif_fig, gif_ax = plt.subplots(1, grid_np.shape[1], figsize=(20, 20))
+            for j in range(grid_np.shape[1]):
+                axs[i, j].imshow(grid_np[i, j], cmap='viridis')
+                axs[i, j].axis('off')
+                gif_ax[j].imshow(grid_np[i, j] * -1 + 1, cmap='gray')
+                gif_ax[j].axis('off')
+            
+            axs[i, 0].set_title(f"Generated Sample {i+1}")
+            axs[i, 1].set_title(f"Condition Image (with {conditions_size_list[i]} pixels)")
+            axs[i, 2].set_title("Ground Truth Image")
+
+            tmp_gif_path = os.path.join(save_dir, f"temp_frame_{i}.png")
+            plt.savefig(tmp_gif_path)
+            plt.close()
+
+            gif_images.append(imageio.imread(tmp_gif_path))
+
+        gif_path = f"{save_path[:-4]}.gif"
+        imageio.mimsave(gif_path, gif_images)
+
+        plt.savefig(save_path_color)
+                                
+        print(f"  Saved recall image for sample {sample_idx} with condition size at {save_path_color}")
+
+    print("\nRecall and regeneration completed.")
+
+if __name__ == "__main__":
+    checkpoint_path = "checkpoints/checkpoint_ep30000.pth"
+    train_dataset, test_dataset = load_data_and_split('heatmap_norm')
+    recall_and_regenerate_edward_test(checkpoint_path, test_dataset, device="cuda", save_dir="recall_images_edward_100_700", conditions_size_list=np.arange(10, 100, 20))
