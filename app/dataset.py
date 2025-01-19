@@ -35,7 +35,6 @@ class CustomDatasetEnhanced(torch.utils.data.Dataset):
             tuple: (shifted_image, condition, mask)
         """
         json_path = self.json_paths[idx]
-        print(json_path)
         with open(json_path, 'r') as f:
             matrix = json.load(f)
         
