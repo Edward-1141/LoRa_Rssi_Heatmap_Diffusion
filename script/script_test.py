@@ -1,4 +1,5 @@
 import os
+import sys
 
 import imageio
 import numpy as np
@@ -7,6 +8,7 @@ from torch.utils.data import DataLoader
 from torchvision.utils import make_grid, save_image
 import matplotlib.pyplot as plt
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) # Temporary fix to include the app directory
 from app.dataset import load_data_and_split
 from app.context_unet import ContextUnet
 from app.ddpm import DDPM
