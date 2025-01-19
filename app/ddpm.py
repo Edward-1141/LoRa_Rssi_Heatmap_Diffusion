@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-import numpy as np
-import random
 
 def ddpm_schedules(beta1, beta2, T):
     """
@@ -63,8 +61,6 @@ class DDPM(nn.Module):
         size = condition.shape[1:]  # [C, H, W]
 
         # Initialize x_i with random noise
-        # set random seed to random number
-        torch.manual_seed(random.randint(0, 100000))
         x_i = torch.randn(n_sample, *size, device=device)  # [B, C, H, W]
 
         # Ensure condition and mask are on the correct device and dtype

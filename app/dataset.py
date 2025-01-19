@@ -1,12 +1,11 @@
 import os
 import json
-import random
 
 import torch
 import torch.nn.functional as F
 
 class CustomDatasetEnhanced(torch.utils.data.Dataset):
-    def __init__(self, json_paths, mask_ratio=0.7, shift_up_down=0, shift_left_right=25, seed=None):
+    def __init__(self, json_paths, mask_ratio=0.7, shift_up_down=0, shift_left_right=25):
         """
         Initializes the dataset.
 
@@ -21,13 +20,6 @@ class CustomDatasetEnhanced(torch.utils.data.Dataset):
         self.mask_ratio = mask_ratio
         self.shift_up_down = shift_up_down
         self.shift_left_right = shift_left_right
-
-        if seed is not None:
-            random.seed(seed)
-            torch.manual_seed(seed)
-            torch.cuda.manual_seed_all(seed)  # If using CUDA
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
 
     def __len__(self):
         return len(self.json_paths)
@@ -137,7 +129,6 @@ class CustomDatasetEnhanced(torch.utils.data.Dataset):
         return shifted, mask
     
 def load_data_and_split(directory, test_size=0.2):
-    random.seed(42)
     json_paths = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.json')]
     print(f"Found {len(json_paths)} JSON files in {directory}")
     
@@ -170,7 +161,6 @@ def load_data_and_split(directory, test_size=0.2):
     test_paths = []
     
     for label, paths in label_to_paths.items():
-        random.shuffle(paths)
         split_index = int(len(paths) * (1 - test_size))
         train_paths.extend(paths[:split_index])
         test_paths.extend(paths[split_index:])
