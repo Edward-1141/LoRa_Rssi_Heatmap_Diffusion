@@ -2,4 +2,6 @@
 
 *.pth
 
+*.h5
+
 output/
