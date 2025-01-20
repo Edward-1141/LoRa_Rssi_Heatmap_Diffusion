@@ -1,8 +1,11 @@
 import os
 import json
 
+import h5py
+import numpy as np
 import torch
 import torch.nn.functional as F
+from torch.utils.data import Dataset
 
 class CustomDatasetEnhanced(torch.utils.data.Dataset):
     def __init__(self, json_paths, mask_ratio=0.7, shift_up_down=0, shift_left_right=25):
@@ -169,5 +172,37 @@ def load_data_and_split(directory, test_size=0.2):
     
     train_dataset = CustomDatasetEnhanced(train_paths)
     test_dataset = CustomDatasetEnhanced(test_paths)
+    
+    return train_dataset, test_dataset
+
+class LoRaHeatmapDatasetV1(Dataset):
+    def __init__(self, h5_file_path):
+        self.h5_file = h5py.File(h5_file_path, 'r')
+        self.total_len = self.h5_file['metadata'].attrs['total_len']
+        self.num_gt = self.h5_file['metadata'].attrs['num_ground_truth_heatmaps']
+        self.num_conbinations = self.h5_file['metadata'].attrs['num_heatmaps_combinations']
+
+    def __len__(self):
+        return self.total_len
+    
+    def __getitem__(self, idx):
+        gt_idx, heatmap_idx = divmod(idx, self.num_conbinations)
+        key = f"data_{gt_idx}_{heatmap_idx}"
+        data = torch.tensor(np.array(self.h5_file["sampled_points"][key]), dtype=torch.float32)
+        gt = torch.tensor(np.array(self.h5_file['ground_truth'][f'{gt_idx}']), dtype=torch.float32)
+
+        # return gt, data[0], data[1]
+        return gt.unsqueeze(0), data[0].unsqueeze(0), data[1].unsqueeze(0)
+    
+    def direct_get(self, gt_idx, heatmap_idx):
+        key = f"data_{gt_idx}_{heatmap_idx}"
+        data = torch.tensor(np.array(self.h5_file["sampled_points"][key]), dtype=torch.float32)
+        gt = torch.tensor(np.array(self.h5_file['ground_truth'][f'{gt_idx}']), dtype=torch.float32)
+
+        return gt.unsqueeze(0), data[0].unsqueeze(0), data[1].unsqueeze(0)
+
+def load_data_v1(train_file, test_file):
+    train_dataset = LoRaHeatmapDatasetV1(train_file)
+    test_dataset = LoRaHeatmapDatasetV1(test_file)
     
     return train_dataset, test_dataset
