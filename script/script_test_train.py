@@ -95,6 +95,16 @@ def train_custom():
             x = x.to(device)
             c = c.to(device)
             mask = mask.to(device)
+            # Save x, c, mask as image for debugging
+            # fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+            # ax[0].imshow(x[0, 0].cpu().numpy(), cmap='viridis')
+            # ax[0].set_title('x')
+            # ax[1].imshow(c[0, 0].cpu().numpy(), cmap='viridis')
+            # ax[1].set_title('c')
+            # ax[2].imshow(mask[0, 0].cpu().numpy(), cmap='viridis')
+            # ax[2].set_title('mask')
+            # plt.savefig(f'{save_dir}/input{ep}.png')
+            # exit()
             loss = ddpm(x, c, mask)
             loss.backward()
             if loss_ema is None:
