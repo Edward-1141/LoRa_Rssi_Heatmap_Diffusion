@@ -87,3 +87,26 @@ class EmbedFC(nn.Module):
     def forward(self, x):
         x = x.view(-1, self.input_dim)
         return self.model(x)
+    
+class CustomConvEncoderV1(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(CustomConvEncoderV1, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv2d(in_channels, 64, kernel_size=3, stride=2, padding=1),  # 56x56 -> 28x28
+            nn.Dropout2d(0.2),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),  # 28x28 -> 14x14
+            nn.Dropout2d(0.2),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1),  # 14x14 -> 7x7
+            nn.Dropout2d(0.2),
+            nn.ReLU(),
+            nn.Conv2d(256, out_channels, kernel_size=3, stride=1, padding=1),  # 7x7 -> 7x7
+            nn.Dropout2d(0.2),
+            nn.ReLU()
+        )
+
+    def forward(self, x):
+        return self.encoder(x)
