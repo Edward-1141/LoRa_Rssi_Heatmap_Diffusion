@@ -14,9 +14,9 @@ from tqdm import tqdm
 import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) # Temporary fix to include the app directory
-from app.dataset import load_data_v1
-from app.context_unet import ContextUnetV2
-from app.ddpm import DDPM
+from model.dataset import load_data_v1
+from model.context_unet import ContextUnetV2
+from model.ddpm import DDPM
 
 # # Set random seed
 # random.seed(42)

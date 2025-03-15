@@ -12,8 +12,8 @@ from torchvision.utils import make_grid, save_image
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) # Temporary fix to include the app directory
-from app.dataset import load_data_and_split
-from app.ddpm import DDPM
+from model.dataset import load_data_and_split
+from model.ddpm import DDPM
 
 # Set random seed
 random.seed(42)
