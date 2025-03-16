@@ -141,7 +141,14 @@ class SearchService:
             if HEATMAP_MODEL_CONFIG['model_types'][heatmap_model_version]['output_dim'] != [self.num_canvas, self.num_canvas]:
                 raise ValueError("The heatmap model output dimension doesn't match with the search area")
 
-            self.rssi_history.append((current_row, current_col, rssi_normalize(rssi)))
+            offset_row = self.num_canvas // 2
+            offset_col = self.num_canvas // 2
+
+            self.rssi_history.append((
+                current_row + offset_row,
+                current_col + offset_col,
+                rssi_normalize(rssi)
+            ))
             self.last_heat_map = self.model_service.generate_heatmap(
                 rssi_list=self.rssi_history,
                 model_version=heatmap_model_version,
@@ -199,7 +206,7 @@ if __name__ == "__main__":
         num_canvas=56
     )
 
-    for rssi in [-120, -120, -110]:
+    for rssi in [-119, -120, -110]:
         new_loc = search_service.get_next_target(
             current_loc=prev_loc,
             rssi=rssi
@@ -209,19 +216,21 @@ if __name__ == "__main__":
     
     print(search_service.agent.location)
     print(type(search_service.get_last_heatmap()))
-    search_service.save_last_heatmap_image()
-
-    # Example of switching agents
-    search_service.set_agent('greedy')
-    search_service.init_params(
-        current_loc=origin_loc,
-        grid_size=250,
-        num_canvas=56
-    )
-    for rssi in [-120, -115, -110, -105, -100, -95, -90]:
-        new_loc = search_service.get_next_target(
-            current_loc=prev_loc,
-            rssi=rssi
-        )
-        print(new_loc)
-        prev_loc = new_loc
+    # Save the last heatmap image
+    # buf = search_service.get_last_heatmap_image()
+    # with open('heatmap.png', 'wb') as f:
+    #     f.write(buf.read())
+    # # Example of switching agents
+    # search_service.set_agent('greedy')
+    # search_service.init_params(
+    #     current_loc=origin_loc,
+    #     grid_size=250,
+    #     num_canvas=56
+    # )
+    # for rssi in [-120, -115, -110, -105, -100, -95, -90]:
+    #     new_loc = search_service.get_next_target(
+    #         current_loc=prev_loc,
+    #         rssi=rssi
+    #     )
+    #     print(new_loc)
+    #     prev_loc = new_loc
