@@ -64,7 +64,11 @@ def get_next_target():
         response = {
             "current_loc": current_loc,
             "rssi": rssi,
-            "next_target": search_service.get_next_target(current_loc=current_loc, rssi=rssi)
+            "next_target": search_service.get_next_target(
+                current_loc=current_loc, 
+                rssi=rssi,
+                **data
+            )
         }
         heatmap = search_service.get_last_heatmap()
         if heatmap is not None:

@@ -137,7 +137,7 @@ class SearchService:
         
         if self.heatmap_model_needed:
             # Check the grid size and the number of canvas to match with the heatmap model output
-            heatmap_model_version = kwargs.get('model_version', 'v1')
+            heatmap_model_version = kwargs.get('model_version', 'v1') # TODO: Default based on config instead of hardcoding
             if HEATMAP_MODEL_CONFIG['model_types'][heatmap_model_version]['output_dim'] != [self.num_canvas, self.num_canvas]:
                 raise ValueError("The heatmap model output dimension doesn't match with the search area")
 
@@ -152,7 +152,7 @@ class SearchService:
             self.last_heat_map = self.model_service.generate_heatmap(
                 rssi_list=self.rssi_history,
                 model_version=heatmap_model_version,
-                guide_weight=kwargs.get('guide_weight', 2.0)
+                guide_weight=kwargs.get('guide_weight', 2.0) # TODO: Default based on config instead of hardcoding
             )
             action_kwargs['heatmap'] = self.last_heat_map
 
@@ -206,10 +206,17 @@ if __name__ == "__main__":
         num_canvas=56
     )
 
+
+    additional_params = {
+        'model_version': 'v1',
+        'guide_weight': 1.2345,
+    }
+
     for rssi in [-119, -120, -110]:
         new_loc = search_service.get_next_target(
             current_loc=prev_loc,
-            rssi=rssi
+            rssi=rssi,
+            **additional_params
         )
         print(new_loc)
         prev_loc = new_loc

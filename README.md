@@ -74,7 +74,9 @@ python api/app.py
 ```json
 {
   "current_loc": [22.084, 37.422],
-  "rssi": -110
+  "rssi": -110,
+  "model_version": "v1", (optional)
+  "search_method": "heatmap_greedy" (optional)
 }
 ```
 
