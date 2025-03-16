@@ -29,7 +29,7 @@ HEATMAP_MODEL_CONFIG = {
     "model_types": {
         "v1": {
             "name": "LoRa Diffusion V1",
-            "checkpoint_path": "v1_checkpoints/checkpoint_ep10.pth",
+            "checkpoint_path": "checkpoints/v1_checkpoints/saved_checkpoint.pth",
             "model_class": "ContextUnetV1",
             "module_name": "context_unet",
             "params": {
@@ -41,7 +41,7 @@ HEATMAP_MODEL_CONFIG = {
         },
         "v2": {
             "name": "LoRa Diffusion V2",
-            "checkpoint_path": "v2_checkpoints/checkpoint_ep10.pth",
+            "checkpoint_path": "checkpoints/v2_checkpoints/saved_checkpoint.pth",
             "model_class": "ContextUnetV2",
             "module_name": "context_unet",
             "params": {
