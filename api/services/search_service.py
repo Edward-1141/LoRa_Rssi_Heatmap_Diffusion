@@ -24,7 +24,7 @@ class SearchService:
         self.origin_loc = None
         self.set_agent(agent)
     
-    def init_params(self, current_loc, grid_size, num_canvas):
+    def init_params(self, current_loc, grid_size, num_canvas, **kwargs):
         """
         Set the parameters for the agent to start a new search.
         
