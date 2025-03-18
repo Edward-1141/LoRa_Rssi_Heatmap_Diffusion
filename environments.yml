@@ -1,10 +1,12 @@
 name: diffusion
 channels:
   - pytorch
-  - anaconda
+  - defaults
   - nvidia
   - conda-forge
-  - defaults
+  - anaconda
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
 dependencies:
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=5.1=1_gnu
@@ -184,6 +186,7 @@ dependencies:
   - x264=1!157.20191217=h7b6447c_0
   - xz=5.4.6=h5eee18b_1
   - zeromq=4.3.5=h6a678d5_0
+  - zipp=3.20.2=py38h06a4308_0
   - zlib=1.2.13=h5eee18b_1
   - zstd=1.5.5=hc292b87_2
   - pip:
@@ -195,11 +198,14 @@ dependencies:
       - bidict==0.23.1
       - blinker==1.8.2
       - click==8.1.8
+      - dnspython==2.6.1
+      - eventlet==0.39.1
       - exceptiongroup==1.2.2
       - flask==3.0.3
       - flask-cors==5.0.0
       - flask-socketio==5.5.1
       - frozenlist==1.5.0
+      - greenlet==3.1.1
       - h11==0.14.0
       - imageio==2.35.1
       - iniconfig==2.0.0
@@ -216,5 +222,3 @@ dependencies:
       - werkzeug==3.0.6
       - wsproto==1.2.0
       - yarl==1.15.2
-      - zipp==3.20.2
-prefix: /home/he/anaconda3/envs/diffusion
