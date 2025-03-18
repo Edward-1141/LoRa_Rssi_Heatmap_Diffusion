@@ -190,5 +190,5 @@ The project includes test files for both the REST API and WebSocket interfaces:
 
 ```sh
 # Run tests
-pytest api/test.py -v
+pytest test/simple_test.py -v
 ```
