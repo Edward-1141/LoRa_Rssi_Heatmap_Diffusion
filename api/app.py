@@ -3,6 +3,9 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask
 
 from api.routes.websocket_routes import init_socketio

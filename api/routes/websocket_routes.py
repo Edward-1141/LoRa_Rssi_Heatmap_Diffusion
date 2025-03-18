@@ -105,7 +105,7 @@ def handle_next_target(data):
         emit('error', {'error': str(e)})
 
 @socketio.on('list_models')
-def handle_list_models():
+def handle_list_models(*args, **kwargs):
     """List available models"""
     try:
         models = ws_manager.model_service.get_available_models()
@@ -115,7 +115,7 @@ def handle_list_models():
         emit('error', {'error': str(e)})
 
 @socketio.on('list_search_methods')
-def handle_list_search_methods():
+def handle_list_search_methods(*args, **kwargs):
     """List available search methods"""
     sid = request.sid
     search_service = ws_manager.get_session(sid)
