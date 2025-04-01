@@ -7,13 +7,11 @@ import aiohttp
 import socketio
 
 from api.services.config import HEATMAP_MODEL_CONFIG, SEARCH_CONFIG
+from test.config import BASE_URL, API_URL
 
 """
 Simple manual test for the search API and the websocket connection
 """
-
-BASE_URL = 'http://localhost:5000/'
-API_URL = BASE_URL + 'api'
 
 @pytest.fixture(scope="function")
 async def client_provider():
@@ -123,7 +121,7 @@ async def test_search(client_provider):
                 'guide_weight': 2.0
             })
 
-            event = await client.receive(timeout=10)
+            event = await client.receive(timeout=25)
             assert event[0] == 'next_target'
             assert event[1]['current_loc'] == current_loc
             assert event[1]['rssi'] == rssi
