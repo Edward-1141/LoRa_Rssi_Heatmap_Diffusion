@@ -73,7 +73,7 @@ class DDPM(nn.Module):
         x_i_store = []  # To store intermediate steps for visualization
 
         for i in range(self.n_T, 0, -1):
-            print(f'sampling timestep {i:03}', end='\r')
+            # print(f'sampling timestep {i:03}', end='\r')
 
             # Create timestep tensor
             t_is = torch.full((n_sample, 1, 1, 1), i / self.n_T, device=device, dtype=x_i.dtype)
