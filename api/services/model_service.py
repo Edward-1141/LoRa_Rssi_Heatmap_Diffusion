@@ -36,7 +36,7 @@ class ModelService:
             model = model_class(**model_params)
             
             # Load the checkpoint
-            checkpoint = torch.load(checkpoint_path, map_location='cpu')
+            checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
             
             # Initialize DDPM
             ddpm = DDPM(
