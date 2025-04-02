@@ -23,7 +23,7 @@ def handle_disconnect():
     ws_manager.remove_session(sid)
 
 @socketio.on('init_search')
-def handle_init_search(data):
+def handle_init_search(data, **kwargs):
     """Initialize search with parameters"""
     sid = request.sid
     search_service = ws_manager.get_session(sid)
@@ -60,7 +60,7 @@ def handle_init_search(data):
         emit('error', {'error': str(e)})
 
 @socketio.on('get_next_target')
-def handle_next_target(data):
+def handle_next_target(data, **kwargs):
     """Get next target location"""
     sid = request.sid
     search_service = ws_manager.get_session(sid)
