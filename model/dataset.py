@@ -176,6 +176,9 @@ def load_data_and_split(directory, test_size=0.2):
     return train_dataset, test_dataset
 
 class LoRaHeatmapDatasetV1(Dataset):
+    """
+    Dataset for LoRa heatmap data v1 (with different sampling sizes and combinations and also shifting)
+    """
     def __init__(self, h5_file_path):
         self.h5_file = h5py.File(h5_file_path, 'r')
         self.total_len = self.h5_file['metadata'].attrs['total_len']
@@ -206,3 +209,40 @@ def load_data_v1(train_file, test_file):
     test_dataset = LoRaHeatmapDatasetV1(test_file)
     
     return train_dataset, test_dataset
+
+class LoRaHeatmapDatasetV2(Dataset):
+    """
+    Dataset for simplified & refined LoRa heatmap data (no sampling, no shifting)
+    """
+    def __init__(self, h5_file_path):
+        self.h5_file = h5py.File(h5_file_path, 'r')
+        self.total_len = self.h5_file['metadata'].attrs['total_len']
+
+    def __len__(self):
+        return self.total_len
+    
+    def __getitem__(self, idx):
+        gt = torch.tensor(np.array(self.h5_file['ground_truth'][f'{idx}']), dtype=torch.float32)
+
+        return gt.unsqueeze(0)
+
+def load_data_v2(train_file, test_file):
+    train_dataset = LoRaHeatmapDatasetV2(train_file)
+    test_dataset = LoRaHeatmapDatasetV2(test_file)
+    
+    return train_dataset, test_dataset
+
+if __name__ == "__main__":
+    from torch.utils.data import DataLoader
+    train_file = 'data/refined_data/train_heatmap_norm.h5'
+    test_file = 'data/refined_data/test_heatmap_norm.h5'
+    train_dataset, test_dataset = load_data_v2(train_file, test_file)
+    print(len(train_dataset))
+    print(len(test_dataset))
+    
+    train_loader = DataLoader(train_dataset, shuffle=False, batch_size=2)
+
+    for i, data in enumerate(train_loader):
+        print(data.shape)
+        print(data[0][0])
+        break
