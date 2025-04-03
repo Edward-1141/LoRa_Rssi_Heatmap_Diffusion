@@ -41,7 +41,7 @@ HEATMAP_MODEL_CONFIG = {
         },
         "v2": {
             "name": "LoRa Diffusion V2",
-            "checkpoint_path": "checkpoints/v2_checkpoints/saved_checkpoint.pth",
+            "checkpoint_path": "checkpoints/refined_data/20250403_024824/saved_checkpoint.pth",
             "model_class": "ContextUnetV2",
             "module_name": "context_unet",
             "params": {
