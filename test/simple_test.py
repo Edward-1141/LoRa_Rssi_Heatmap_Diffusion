@@ -5,6 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pytest
 import aiohttp
 import socketio
+import base64
 
 from api.services.config import HEATMAP_MODEL_CONFIG, SEARCH_CONFIG
 from test.config import BASE_URL, API_URL
@@ -117,7 +118,7 @@ async def test_search(client_provider):
             await client.emit('get_next_target', {
                 'current_loc': current_loc,
                 'rssi': rssi,
-                'model_version': 'v1',
+                'model_version': 'v2',
                 'guide_weight': 2.0
             })
 
@@ -134,6 +135,11 @@ async def test_search(client_provider):
             assert event[1]['heatmap'] is not None
             assert isinstance(event[1]['heatmap'], list)
             assert len(event[1]['heatmap']) == len(event[1]['heatmap'][0]) == num_canvas
+
+            # Save the heatmap image (encoded in base64) to a file in output/
+            heatmap_image = event[1]['heatmap_image']
+            with open('../output/test-heatmap.png', 'wb') as f:
+                f.write(base64.b64decode(heatmap_image))
 
         except socketio.exceptions.TimeoutError:
             pytest.fail("Next target timed out")
