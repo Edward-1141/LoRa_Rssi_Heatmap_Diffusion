@@ -27,6 +27,7 @@ def handle_init_search(data, **kwargs):
     """Initialize search with parameters"""
     sid = request.sid
     search_service = ws_manager.get_session(sid)
+    current_app.logger.info(f"Initializing search with data: {data}")
     
     try:
         agent = data.get('agent', 'heatmap_greedy')
@@ -64,6 +65,7 @@ def handle_next_target(data, **kwargs):
     """Get next target location"""
     sid = request.sid
     search_service = ws_manager.get_session(sid)
+    current_app.logger.info(f"Getting next target with data: {data}")
     
     try:
         current_loc = data.get('current_loc')
@@ -73,7 +75,6 @@ def handle_next_target(data, **kwargs):
         if rssi is None:
             raise ValueError("RSSI is required")
         
-        current_app.logger.debug(f"Getting next target with data: {data}")
         
         next_target = search_service.get_next_target(
             **data

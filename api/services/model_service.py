@@ -2,6 +2,7 @@ import os
 import importlib
 
 import torch
+from flask import current_app
 
 from model.ddpm import DDPM
 from api.services.config import HEATMAP_MODEL_CONFIG
@@ -36,6 +37,7 @@ class ModelService:
             model = model_class(**model_params)
             
             # Load the checkpoint
+            current_app.logger.info(f"Loading checkpoint from {checkpoint_path}")
             checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
             
             # Initialize DDPM
