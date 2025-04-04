@@ -1,4 +1,6 @@
 import random
+import math
+
 import numpy as np
 
 from .agent import Agent
@@ -13,10 +15,13 @@ class AgentHeatmapGreedy(Agent):
         
         Args:
             explore (float): Probability of taking a random action
-            visited_penalty (float): Penalty factor for visited locations (0-1)
+            visited_penalty (float): Penalty factor for visited locations which should be positive (Not used yet)
             temperature (float): Controls randomness in hotspot selection (higher = more random)
             max_history (int): Maximum number of past locations to remember
         """
+        # TODO: Add check for visited_penalty we use it in the future
+        # if visited_penalty < 0:
+        #     raise ValueError("visited_penalty should be positive")
         self.explore = explore
         self.visited_penalty = visited_penalty
         self.temperature = temperature
@@ -76,60 +81,64 @@ class AgentHeatmapGreedy(Agent):
         # Current position in the grid (from -offset to offset (-1))
         curr_row, curr_col = self.location
         
-        # Create a modified heatmap with penalties for visited locations
-        modified_heatmap = heatmap.copy()
-        
-        # Apply penalty to visited locations
-        for (r, c) in self.visited:
-            # Translate visited location to heatmap indices
-            heatmap_r = r + offset_col
-            heatmap_c = c + offset_row
-            # Check if location is within heatmap bounds
-            if 0 <= heatmap_r < heatmap.shape[0] and 0 <= heatmap_c < heatmap.shape[1]:
-                visits = self.visit_count.get((r, c), 1)
-                modified_heatmap[heatmap_r, heatmap_c] *= (1 - self.visited_penalty) ** visits
-        
-        # Find the hottest spot in the modified heatmap
-        # Using softmax-weighted sampling to allow for some randomness in selection
-        flattened = modified_heatmap.flatten()
+        # Find the hottest spot
+        flattened = heatmap.flatten()
         softmax_values = np.exp(flattened / self.temperature)
         softmax_values = softmax_values / np.sum(softmax_values)
         
         # Sample from the softmax distribution
         choice_idx = np.random.choice(len(flattened), p=softmax_values)
-        hotspot_row, hotspot_col = np.unravel_index(choice_idx, modified_heatmap.shape)
+        hotspot_row, hotspot_col = np.unravel_index(choice_idx, heatmap.shape)
         
         # Translate hotspot indices back to agent coordinates
         hotspot_row -= offset_col
         hotspot_col -= offset_row
         
-        # Determine the action to move towards the hotspot
-        dr = 0
-        dc = 0
+        # Determine possible actions and their scores
+        possible_actions = []
+        action_scores = []
         
-        # Determine vertical movement (prioritize the dimension with larger difference)
-        row_diff = hotspot_row - curr_row
-        col_diff = hotspot_col - curr_col
-        
-        if abs(row_diff) > abs(col_diff):
-            dr = 1 if row_diff > 0 else -1 if row_diff < 0 else 0
-        else:
-            dc = 1 if col_diff > 0 else -1 if col_diff < 0 else 0
+        # Check all four possible actions
+        for dr, dc in [(0, 1), (1, 0), (0, -1), (-1, 0)]:  # right, down, left, up
+            next_row = curr_row + dr
+            next_col = curr_col + dc
+            next_loc = (next_row, next_col)
             
-        # If we're already at the hotspot or both dimensions have equal differences,
-        # choose one randomly
-        if dr == 0 and dc == 0:
-            if row_diff != 0:
-                dr = 1 if row_diff > 0 else -1
-            elif col_diff != 0:
-                dc = 1 if col_diff > 0 else -1
-            else:
-                # We're exactly at the hotspot, take a random action
-                action = rand_action()
-                self.update_state(action, rssi, **kwargs)
-                return action
+            # Calculate score based on direction towards hotspot
+            row_diff = hotspot_row - curr_row
+            col_diff = hotspot_col - curr_col
+            
+            # Calculate directional score
+            def get_directional_score(move_dir, target_diff):
+                """Calculate score for a direction based on whether it moves towards or away from target."""
+                def sigmoid(x):
+                    return 1 / (1 + math.exp(-x))
+
+                if move_dir == 0:
+                    return 0
+                # Higher score for moving in correct direction with larger magnitude
+                x = abs(target_diff) if (move_dir * target_diff) > 0 else -abs(target_diff)
+                x = x / (1 + abs(x)) # prevent sigmoid saturation
+                return sigmoid(x)
+            
+            # Combine scores from both dimensions
+            score = get_directional_score(dr, row_diff) + get_directional_score(dc, col_diff)
+
+            # Apply penalty if next location is visited
+            if next_loc in self.visited:
+                # Here the penalty is very strong which I want to prioritize exploration
+                score -= 2 # since 2*sigmoid(x) is in (0, 2)
+                
+                # A more tunable version
+                # visits = self.visit_count.get(next_loc, 0)
+                # score *= math.exp(-self.visited_penalty * visits)
+
+            possible_actions.append((dr, dc))
+            action_scores.append(score)
         
-        action = np.array([dr, dc])
+        # Choose action with highest score
+        best_action_idx = np.argmax(action_scores)
+        action = np.array(possible_actions[best_action_idx])
         self.update_state(action, rssi, **kwargs)
         return action
     
