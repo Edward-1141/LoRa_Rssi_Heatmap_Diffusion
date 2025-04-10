@@ -13,7 +13,7 @@ from model.dataset import load_data_v2
 from model.context_unet import ContextUnetV2
 from model.ddpm import DDPM
 
-def recall_and_regenerate_edward_test(
+def recall_and_regenerate_test(
     checkpoint_path, 
     dataset, 
     device="cuda",
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     # Load the dataset
     train_dataset, test_dataset = load_data_v2(train_file='data/refined_data/train_heatmap_norm.h5', test_file='data/refined_data/test_heatmap_norm.h5')
 
-    recall_and_regenerate_edward_test(
+    recall_and_regenerate_test(
         checkpoint_path="checkpoints/refined_data/20250403_024824/saved_checkpoint.pth",
         dataset=train_dataset,
         device="cuda:0",
