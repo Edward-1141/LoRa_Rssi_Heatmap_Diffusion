@@ -1,5 +1,16 @@
 # LoRa Conditional Diffusion
 
+This project implements a LoRa signal strength prediction system using conditional diffusion models. It generates heatmaps showing LoRa signal coverage and includes search agent to locate optimal positions for LoRaWAN devices. The implementation is based on and adapted from the [Conditional Diffusion MNIST](https://github.com/TeaPearce/Conditional_Diffusion_MNIST) project, which originally demonstrated conditional diffusion on MNIST images.
+
+## Project Structure
+
+### Directories
+
+- **api**: Contains the Flask API code, including services and routes.
+- **model**: Diffusion model code.
+- **search**: Search agent code.
+- **script**: Contains testing scripts.
+
 ## Installation
 
 To set up the environment, use the enviroments.yml file provided in the repository. This file contains all the necessary dependencies.
@@ -9,14 +20,6 @@ conda env create -f enviroments.yml
 conda activate diffusion
 ```
 
-## Project Structure
-
-### Directories
-
-- **api**: Contains the Flask API code, including services and routes.
-- **model**: Diffusion model code.
-- **search**: Search agent code.
-- **script**: Contains testing scripts and notebooks.
 
 ## Starting the Flask Server
 
