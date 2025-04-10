@@ -4,20 +4,16 @@ import sys
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torchvision
 torchvision.disable_beta_transforms_warning()
 from torchvision.transforms import v2
-from torchvision.utils import make_grid, save_image
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 from tqdm import tqdm
-import json
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))) # Temporary fix to include the app directory
-from model.dataset import load_data_v2
+from model.dataset import load_data
 from model.context_unet import ContextUnetV2
 from model.ddpm import DDPM
 
@@ -85,7 +81,7 @@ def train_custom():
         ddpm.load_state_dict(checkpoint['model_state_dict'])
         print(f"Model loaded from {load_checkpoint_path}")
 
-    train_dataset, test_dataset = load_data_v2(train_file='data/refined_data/train_heatmap_norm.h5', test_file='data/refined_data/test_heatmap_norm.h5')
+    train_dataset, test_dataset = load_data(train_file='data/refined_data/train_heatmap_norm.h5', test_file='data/refined_data/test_heatmap_norm.h5')
     print(f"Training dataset size: {len(train_dataset)}")
     print(f"Testing dataset size: {len(test_dataset)}")
     

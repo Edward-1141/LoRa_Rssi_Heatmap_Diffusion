@@ -9,7 +9,7 @@ from torchvision.utils import make_grid, save_image
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))) # Temporary fix to include the app directory
-from model.dataset import load_data_v2
+from model.dataset import load_data
 from model.context_unet import ContextUnetV2
 from model.ddpm import DDPM
 
@@ -191,7 +191,7 @@ def recall_and_regenerate_test(
 if __name__ == "__main__":
 
     # Load the dataset
-    train_dataset, test_dataset = load_data_v2(train_file='data/refined_data/train_heatmap_norm.h5', test_file='data/refined_data/test_heatmap_norm.h5')
+    train_dataset, test_dataset = load_data(train_file='data/refined_data/train_heatmap_norm.h5', test_file='data/refined_data/test_heatmap_norm.h5')
 
     recall_and_regenerate_test(
         checkpoint_path="checkpoints/refined_data/20250403_024824/saved_checkpoint.pth",
