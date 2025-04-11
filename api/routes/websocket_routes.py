@@ -61,7 +61,8 @@ def handle_init_search(data, **kwargs):
             'message': f'Search initialized with agent: {agent}',
             'agent': agent,
             'grid_size': grid_size,
-            'num_canvas': num_canvas
+            'num_canvas': num_canvas,
+            'demo_data': search_service.demo_data
         })
     except Exception as e:
         current_app.logger.error(f"Error initializing search: {e}")
@@ -90,7 +91,8 @@ def handle_next_target(data, **kwargs):
         response = {
             'current_loc': current_loc,
             'rssi': rssi,
-            'next_target': next_target
+            'next_target': next_target,
+            'demo_data': search_service.demo_data
         }
         
         # Handle heatmap data

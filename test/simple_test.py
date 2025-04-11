@@ -1,3 +1,4 @@
+import json
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -86,11 +87,11 @@ async def test_websocket_connection(client_provider):
 @pytest.mark.asyncio
 async def test_search(client_provider):
     """Test simple search"""
-    grid_size = 250
+    grid_size = 150
     num_canvas = 56
     agent = 'heatmap_greedy'
     origin_loc = [22.541, 114.058]
-    start_loc = [22.540, 114.057]
+    start_loc = [22.521, 114.04]
     rssi = -110.0
 
     async for client in client_provider:
@@ -111,6 +112,9 @@ async def test_search(client_provider):
             assert event[1]['grid_size'] == grid_size
             assert event[1]['num_canvas'] == num_canvas
 
+            with open('../output/test-search-initialized.json', 'w') as f:
+                json.dump(event[1], f)
+
         except socketio.exceptions.TimeoutError:
             pytest.fail("Search initialization timed out")
         except Exception as e:
@@ -118,7 +122,7 @@ async def test_search(client_provider):
         
         try:
             await client.emit('get_next_target', {
-                'current_loc': origin_loc,
+                'current_loc': start_loc,
                 'rssi': rssi,
                 'model_version': 'v2',
                 'guide_weight': 2.0
@@ -126,7 +130,7 @@ async def test_search(client_provider):
 
             event = await client.receive(timeout=25)
             assert event[0] == 'next_target'
-            assert event[1]['current_loc'] == origin_loc
+            assert event[1]['current_loc'] == start_loc
             assert event[1]['rssi'] == rssi
             assert event[1]['next_target'] is not None
             assert len(event[1]['next_target']) == 2
@@ -142,6 +146,14 @@ async def test_search(client_provider):
             heatmap_image = event[1]['heatmap_image']
             with open('../output/test-heatmap.png', 'wb') as f:
                 f.write(base64.b64decode(heatmap_image))
+            
+            # Test demo data
+            with open('../output/test-demo-data.json', 'w') as f:
+                json.dump(event[1]['demo_data'], f)
+            
+            # Whole response
+            with open('../output/test-response.json', 'w') as f:
+                json.dump(event[1], f)
 
         except socketio.exceptions.TimeoutError:
             pytest.fail("Next target timed out")

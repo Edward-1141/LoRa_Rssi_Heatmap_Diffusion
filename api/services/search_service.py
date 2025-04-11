@@ -23,6 +23,9 @@ class SearchService:
         self.radius = None
         self.origin_loc = None
         self.set_agent(agent)
+
+        # Demo experiment purpose
+        self.demo_data = {}
     
     def init_params(self, origin_loc, grid_size, num_canvas, start_loc, **kwargs):
         """
@@ -52,6 +55,7 @@ class SearchService:
         self.start_col = int(y / self.grid_size) # -self.num_canvas // 2 - self.grid_size // 2
         self.agent.set_loc([self.start_row, self.start_col])
         # self.agent.set_loc([0, 0])
+        self.demo_data["current_loc_idx"] = [self.start_row, self.start_col]
 
         self.ready = True
 
@@ -143,6 +147,8 @@ class SearchService:
         # Get the current row and column in the grid based on the current location
         current_row = int(x / self.grid_size)
         current_col = int(y / self.grid_size)
+
+        self.demo_data["current_loc_idx"] = [current_row, current_col]
         
         # Raise an error if the agent is outside the search area
         if abs(x) > self.radius or abs(y) > self.radius:
@@ -172,6 +178,9 @@ class SearchService:
                   
         action = self.agent.action(rssi, **action_kwargs)
         self.agent.update_loc(action)
+
+        self.demo_data["action"] = action.tolist()
+        self.demo_data["next_loc_idx"] = self.agent.location.tolist()
 
         # Convert the new location to lon, lat
         new_x = self.agent.location[0] * self.grid_size
