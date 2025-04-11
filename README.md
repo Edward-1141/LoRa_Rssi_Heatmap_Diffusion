@@ -114,7 +114,8 @@ socket.on('available_methods', (data) => {
 ```javascript
 {
   "agent": "heatmap_greedy",  // Search agent/method to use
-  "current_loc": [22.084, 37.422],  // Starting location [longitude, latitude]
+  "origin_loc": [22.084, 37.422],  // origin location of the search
+  "start_loc": [22.083, 37.421],  // starting location of the search
   "grid_size": 250,  // Size of each grid cell in meters
   "num_canvas": 56  // Number of grid cells in each direction
 }
@@ -126,7 +127,8 @@ socket.on('available_methods', (data) => {
 ```javascript
 socket.emit('init_search', {
   agent: 'heatmap_greedy',
-  current_loc: [22.084, 37.422],
+  origin_loc: [22.084, 37.422],
+  start_loc: [22.083, 37.421],
   grid_size: 250,
   num_canvas: 56
 });
