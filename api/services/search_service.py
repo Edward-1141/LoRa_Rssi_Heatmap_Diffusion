@@ -24,21 +24,34 @@ class SearchService:
         self.origin_loc = None
         self.set_agent(agent)
     
-    def init_params(self, current_loc, grid_size, num_canvas, **kwargs):
+    def init_params(self, origin_loc, grid_size, num_canvas, start_loc, **kwargs):
         """
         Set the parameters for the agent to start a new search.
         
         Args:
-            current_loc (np.array): Current location of the agent (lon, lat)
+            origin_loc (np.array): Origin location of the search (lon, lat)
+            start_loc (np.array): Starting location of the agent (lon, lat)
             grid_size (int): Size of the grid in meters
             num_canvas (int): Number of grids in the canvas, needed to match with the heatmap model output if needed
         """
         self.grid_size = grid_size
         self.num_canvas = num_canvas
         self.radius = grid_size * num_canvas / 2
-        self.origin_loc = current_loc
-        self.agent.set_loc([0, 0])
+        self.origin_loc = origin_loc
         self.rssi_history = []
+
+        # Convert the start location to x, y coordinates (in meters)
+        x, y = lon_lat_to_xy(
+            lon=start_loc[0],
+            lat=start_loc[1],
+            origin_lon=self.origin_loc[0],
+            origin_lat=self.origin_loc[1]
+        )
+        # convert the x, y coordinates to the grid index
+        self.start_row = int(x / self.grid_size) # -self.num_canvas // 2 - self.grid_size // 2
+        self.start_col = int(y / self.grid_size) # -self.num_canvas // 2 - self.grid_size // 2
+        self.agent.set_loc([self.start_row, self.start_col])
+        # self.agent.set_loc([0, 0])
 
         self.ready = True
 
@@ -201,7 +214,7 @@ if __name__ == "__main__":
     prev_loc = origin_loc = [22.084, 37.422]
 
     search_service.init_params(
-        current_loc=origin_loc,
+        origin_loc=origin_loc,
         grid_size=250,
         num_canvas=56
     )
