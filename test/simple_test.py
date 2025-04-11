@@ -89,7 +89,8 @@ async def test_search(client_provider):
     grid_size = 250
     num_canvas = 56
     agent = 'heatmap_greedy'
-    current_loc = [22.541, 114.058]
+    origin_loc = [22.541, 114.058]
+    start_loc = [22.540, 114.057]
     rssi = -110.0
 
     async for client in client_provider:
@@ -98,7 +99,8 @@ async def test_search(client_provider):
                 'agent': agent,
                 'grid_size': grid_size,
                 'num_canvas': num_canvas,
-                'current_loc': current_loc
+                'origin_loc': origin_loc,
+                'start_loc': start_loc
             })
 
             event = await client.receive(timeout=1)
@@ -116,7 +118,7 @@ async def test_search(client_provider):
         
         try:
             await client.emit('get_next_target', {
-                'current_loc': current_loc,
+                'current_loc': origin_loc,
                 'rssi': rssi,
                 'model_version': 'v2',
                 'guide_weight': 2.0
@@ -124,7 +126,7 @@ async def test_search(client_provider):
 
             event = await client.receive(timeout=25)
             assert event[0] == 'next_target'
-            assert event[1]['current_loc'] == current_loc
+            assert event[1]['current_loc'] == origin_loc
             assert event[1]['rssi'] == rssi
             assert event[1]['next_target'] is not None
             assert len(event[1]['next_target']) == 2
