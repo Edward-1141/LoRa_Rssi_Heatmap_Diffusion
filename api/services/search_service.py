@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from search.agent import Agent
-from search.utils import lon_lat_to_xy, xy_to_lon_lat, rssi_normalize
+from search.utils import get_lon_lat_limits, lon_lat_to_xy, xy_to_lon_lat, rssi_normalize
 from api.services.model_service import ModelService
 from api.services.config import SEARCH_CONFIG, HEATMAP_MODEL_CONFIG
 
@@ -56,6 +56,26 @@ class SearchService:
         self.agent.set_loc([self.start_row, self.start_col])
         self.demo_data["current_loc_idx"] = [self.start_row, self.start_col]
 
+        search_radius = num_canvas // 2 * grid_size
+        self.lat_lon_limits = get_lon_lat_limits(
+            origin_lat=self.origin_loc[0],
+            origin_lon=self.origin_loc[1],
+            radius=search_radius
+        )
+        self.x_min, self.y_min = lon_lat_to_xy(
+            lat=self.lat_lon_limits['min_lat'],
+            lon=self.lat_lon_limits['min_lon'],
+            origin_lat=self.origin_loc[0],
+            origin_lon=self.origin_loc[1]
+        )
+
+        self.x_max, self.y_max = lon_lat_to_xy(
+            lat=self.lat_lon_limits['max_lat'],
+            lon=self.lat_lon_limits['max_lon'],
+            origin_lat=self.origin_loc[0],
+            origin_lon=self.origin_loc[1]
+        )
+        
         self.ready = True
 
     def set_agent(self, agent_type, force_reload=False):
@@ -107,8 +127,11 @@ class SearchService:
 
         # Generate the heatmap image without the color bar
         buf = io.BytesIO()
-        plt.imshow(self.last_heat_map, cmap='viridis')
-        plt.axis('off')  # Turn off the axis
+        plt.imshow(self.last_heat_map, cmap='viridis', interpolation='nearest', origin='lower', extent=[self.x_min, self.x_max, self.y_min, self.y_max])
+        plt.colorbar(label='RSSI')
+        plt.title('Predicted RSSI distribution')
+        plt.xlabel('X (meters)')
+        plt.ylabel('Y (meters)')
         plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
         plt.close()
         buf.seek(0)
