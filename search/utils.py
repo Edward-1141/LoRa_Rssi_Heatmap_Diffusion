@@ -51,7 +51,7 @@ def xy_to_lon_lat(x, y, origin_lon, origin_lat):
     lat = y / 111139 + origin_lat
     return lat, lon
 
-def get_lon_lax_limits(origin_lon, origin_lat, radius):
+def get_lon_lat_limits(origin_lon, origin_lat, radius):
     """
     Get the minimum and maximum longitude and latitude based on the origin point and the search radius
 
