@@ -33,14 +33,21 @@ def handle_init_search(data, **kwargs):
         agent = data.get('agent', 'heatmap_greedy')
         grid_size = int(data.get('grid_size'))
         num_canvas = int(data.get('num_canvas'))
-        current_loc = data.get('current_loc')
+        origin_loc = data.get('origin_loc')
+        start_loc = data.get('start_loc')
         
-        if current_loc is None:
-            current_app.logger.error("Current location is required")
-            raise ValueError("Current location is required")
+        if origin_loc is None:
+            current_app.logger.error("Origin location is required")
+            raise ValueError("Origin location is required")
+        
+        if start_loc is None:
+            current_app.logger.error("Start location is required")
+            raise ValueError("Start location is required")
+        
         if grid_size is None:
             current_app.logger.error("Grid size is required")
             raise ValueError("Grid size is required")
+        
         if num_canvas is None:
             current_app.logger.error("Number of canvas is required")
             raise ValueError("Number of canvas is required")
@@ -54,7 +61,8 @@ def handle_init_search(data, **kwargs):
             'message': f'Search initialized with agent: {agent}',
             'agent': agent,
             'grid_size': grid_size,
-            'num_canvas': num_canvas
+            'num_canvas': num_canvas,
+            'demo_data': search_service.demo_data
         })
     except Exception as e:
         current_app.logger.error(f"Error initializing search: {e}")
@@ -83,7 +91,8 @@ def handle_next_target(data, **kwargs):
         response = {
             'current_loc': current_loc,
             'rssi': rssi,
-            'next_target': next_target
+            'next_target': next_target,
+            'demo_data': search_service.demo_data
         }
         
         # Handle heatmap data

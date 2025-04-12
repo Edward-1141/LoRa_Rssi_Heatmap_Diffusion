@@ -23,22 +23,39 @@ class SearchService:
         self.radius = None
         self.origin_loc = None
         self.set_agent(agent)
+
+        # Demo experiment purpose
+        self.demo_data = {}
     
-    def init_params(self, current_loc, grid_size, num_canvas, **kwargs):
+    def init_params(self, origin_loc, grid_size, num_canvas, start_loc, **kwargs):
         """
         Set the parameters for the agent to start a new search.
         
         Args:
-            current_loc (np.array): Current location of the agent (lon, lat)
+            origin_loc (np.array): Origin location of the search (lon, lat)
+            start_loc (np.array): Starting location of the agent (lon, lat)
             grid_size (int): Size of the grid in meters
             num_canvas (int): Number of grids in the canvas, needed to match with the heatmap model output if needed
         """
         self.grid_size = grid_size
         self.num_canvas = num_canvas
         self.radius = grid_size * num_canvas / 2
-        self.origin_loc = current_loc
-        self.agent.set_loc([0, 0])
+        self.origin_loc = origin_loc
         self.rssi_history = []
+
+        # Convert the start location to x, y coordinates (in meters)
+        x, y = lon_lat_to_xy(
+            lon=start_loc[0],
+            lat=start_loc[1],
+            origin_lon=self.origin_loc[0],
+            origin_lat=self.origin_loc[1]
+        )
+        # convert the x, y coordinates to the grid index
+        self.start_row = int(x / self.grid_size) # -self.num_canvas // 2 - self.grid_size // 2
+        self.start_col = int(y / self.grid_size) # -self.num_canvas // 2 - self.grid_size // 2
+        self.agent.set_loc([self.start_row, self.start_col])
+        # self.agent.set_loc([0, 0])
+        self.demo_data["current_loc_idx"] = [self.start_row, self.start_col]
 
         self.ready = True
 
@@ -130,6 +147,8 @@ class SearchService:
         # Get the current row and column in the grid based on the current location
         current_row = int(x / self.grid_size)
         current_col = int(y / self.grid_size)
+
+        self.demo_data["current_loc_idx"] = [current_row, current_col]
         
         # Raise an error if the agent is outside the search area
         if abs(x) > self.radius or abs(y) > self.radius:
@@ -159,6 +178,9 @@ class SearchService:
                   
         action = self.agent.action(rssi, **action_kwargs)
         self.agent.update_loc(action)
+
+        self.demo_data["action"] = action.tolist()
+        self.demo_data["next_loc_idx"] = self.agent.location.tolist()
 
         # Convert the new location to lon, lat
         new_x = self.agent.location[0] * self.grid_size
@@ -201,7 +223,7 @@ if __name__ == "__main__":
     prev_loc = origin_loc = [22.084, 37.422]
 
     search_service.init_params(
-        current_loc=origin_loc,
+        origin_loc=origin_loc,
         grid_size=250,
         num_canvas=56
     )
