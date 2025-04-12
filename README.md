@@ -1,5 +1,8 @@
 # LoRa Conditional Diffusion
 
+[![build](https://github.com/Edward-1141/LoRa_Rssi_Heatmap_Diffusion/actions/workflows/python-tests.yml/badge.svg)](https://github.com/Edward-1141/LoRa_Rssi_Heatmap_Diffusion/actions/workflows/python-tests.yml)
+[![Coverage Status](https://coveralls.io/repos/github/Edward-1141/LoRa_Rssi_Heatmap_Diffusion/badge.svg?branch=v1.0)](https://coveralls.io/github/Edward-1141/LoRa_Rssi_Heatmap_Diffusion?branch=v1.0)
+
 This project implements a LoRa signal strength prediction system using conditional diffusion models. It generates heatmaps showing LoRa signal coverage and includes search agent to locate optimal positions for LoRaWAN devices. The implementation is based on and adapted from the [Conditional Diffusion MNIST](https://github.com/TeaPearce/Conditional_Diffusion_MNIST) project, which originally demonstrated conditional diffusion on MNIST images.
 
 ## Project Structure
