@@ -13,13 +13,26 @@ This project implements a LoRa signal strength prediction system using condition
 
 ## Installation
 
-To set up the environment, use the enviroments.yml file provided in the repository. This file contains all the necessary dependencies.
+To set up the environment, use the enviroments.yml and install pytorch with CUDA. Below are examples of how to install the environment and pytorch. 
+Note: You will need nvidia GPU with nvidia driver installed to enable CUDA.
 
 ```sh
-conda env create -f enviroments.yml
+# Install torch with CUDA 11.8 using conda
+conda env create -f environments.yml
 conda activate diffusion
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 
 ```
 
+```sh
+# Without CUDA, tested with python version 3.8.19
+python3 -m venv diffusion_env # Windows: python -m venv diffusion_env
+source diffusion_env/bin/activate # Windows: diffusion_env\Scripts\activate
+pip3 install -r requirements.txt
+
+# Install torch with CPU
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu # For Linux
+pip3 install torch torchvision torchaudio # For Windows
+```
 
 ## Starting the Flask Server
 
