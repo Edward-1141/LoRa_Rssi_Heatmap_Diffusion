@@ -3,7 +3,7 @@ import sys
 import dotenv
 
 dotenv.load_dotenv()
-sys.path.append(os.getenv('DRONE_SEARCH_ROOT_DIR'))
+sys.path.append(os.getenv('DRONE_SEARCH_ROOT_DIR', '.'))
 
 import pytest
 from flask import Flask
@@ -55,5 +55,5 @@ def search_config():
 
 @pytest.fixture(scope="session")
 def output_dir():
-    return os.path.join(os.getenv('DRONE_SEARCH_ROOT_DIR'), 'output')
+    return os.path.join(os.getenv('DRONE_SEARCH_ROOT_DIR', '.'), 'output')
 
