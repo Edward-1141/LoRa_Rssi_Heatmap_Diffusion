@@ -49,7 +49,7 @@ def xy_to_lon_lat(x, y, origin_lon, origin_lat):
     """
     lon = x / (111139 * np.cos(np.radians(origin_lat))) + origin_lon
     lat = y / 111139 + origin_lat
-    return lon, lat
+    return lat, lon
 
 def get_lon_lax_limits(origin_lon, origin_lat, radius):
     """

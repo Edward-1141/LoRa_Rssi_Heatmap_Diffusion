@@ -32,8 +32,8 @@ class SearchService:
         Set the parameters for the agent to start a new search.
         
         Args:
-            origin_loc (np.array): Origin location of the search (lon, lat)
-            start_loc (np.array): Starting location of the agent (lon, lat)
+            origin_loc (np.array): Origin location of the search (lat, lon)
+            start_loc (np.array): Starting location of the agent (lat, lon)
             grid_size (int): Size of the grid in meters
             num_canvas (int): Number of grids in the canvas, needed to match with the heatmap model output if needed
         """
@@ -45,10 +45,10 @@ class SearchService:
 
         # Convert the start location to x, y coordinates (in meters)
         x, y = lon_lat_to_xy(
-            lon=start_loc[0],
-            lat=start_loc[1],
-            origin_lon=self.origin_loc[0],
-            origin_lat=self.origin_loc[1]
+            lat=start_loc[0],
+            lon=start_loc[1],
+            origin_lat=self.origin_loc[0],
+            origin_lon=self.origin_loc[1],
         )
         # convert the x, y coordinates to the grid index
         self.start_row = int(x / self.grid_size) # -self.num_canvas // 2 - self.grid_size // 2
@@ -121,7 +121,7 @@ class SearchService:
         Get the next action for the agent based on the current RSSI value and location.
         
         Args:
-            current_loc (np.array): Current location of the agent (lon, lat)
+            current_loc (np.array): Current location of the agent (lat, lon)
             rssi (float): Current RSSI value
             "model_version" (str): Model version to use for the heatmap (optional)
             "guide_weight" (float): Guide weight for the heatmap (optional)
@@ -136,10 +136,10 @@ class SearchService:
 
         # Convert the current location to x, y coordinates (in meters)
         x, y = lon_lat_to_xy(
-            lon=current_loc[0],
-            lat=current_loc[1],
-            origin_lon=self.origin_loc[0],
-            origin_lat=self.origin_loc[1]
+            lat=current_loc[0],
+            lon=current_loc[1],
+            origin_lat=self.origin_loc[0],
+            origin_lon=self.origin_loc[1]
         )
 
         # Get the current row and column in the grid based on the current location
@@ -189,8 +189,8 @@ class SearchService:
         return xy_to_lon_lat(
             x=new_x,
             y=new_y,
-            origin_lon=self.origin_loc[0],
-            origin_lat=self.origin_loc[1]
+            origin_lat=self.origin_loc[0],
+            origin_lon=self.origin_loc[1]
         )
 
     def get_last_heatmap(self):
@@ -212,54 +212,3 @@ class SearchService:
         """
         return list(SEARCH_CONFIG['agent_types'].keys())
         
-
-if __name__ == "__main__":
-    model_service = ModelService()
-    search_service = SearchService(
-        model_service,
-        agent='heatmap_greedy'
-    )
-
-    prev_loc = origin_loc = [22.084, 37.422]
-
-    search_service.init_params(
-        origin_loc=origin_loc,
-        grid_size=250,
-        num_canvas=56
-    )
-
-
-    additional_params = {
-        'model_version': 'v1',
-        'guide_weight': 1.2345,
-    }
-
-    for rssi in [-119, -120, -110]:
-        new_loc = search_service.get_next_target(
-            current_loc=prev_loc,
-            rssi=rssi,
-            **additional_params
-        )
-        print(new_loc)
-        prev_loc = new_loc
-    
-    print(search_service.agent.location)
-    print(type(search_service.get_last_heatmap()))
-    # Save the last heatmap image
-    # buf = search_service.get_last_heatmap_image()
-    # with open('heatmap.png', 'wb') as f:
-    #     f.write(buf.read())
-    # # Example of switching agents
-    # search_service.set_agent('greedy')
-    # search_service.init_params(
-    #     current_loc=origin_loc,
-    #     grid_size=250,
-    #     num_canvas=56
-    # )
-    # for rssi in [-120, -115, -110, -105, -100, -95, -90]:
-    #     new_loc = search_service.get_next_target(
-    #         current_loc=prev_loc,
-    #         rssi=rssi
-    #     )
-    #     print(new_loc)
-    #     prev_loc = new_loc
