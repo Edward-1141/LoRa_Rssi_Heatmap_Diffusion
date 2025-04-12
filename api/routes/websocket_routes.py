@@ -31,8 +31,8 @@ def handle_init_search(data, **kwargs):
     
     try:
         agent = data.get('agent', 'heatmap_greedy')
-        grid_size = int(data.get('grid_size'))
-        num_canvas = int(data.get('num_canvas'))
+        grid_size = data.get('grid_size')
+        num_canvas = data.get('num_canvas')
         origin_loc = data.get('origin_loc')
         start_loc = data.get('start_loc')
         
@@ -47,11 +47,13 @@ def handle_init_search(data, **kwargs):
         if grid_size is None:
             current_app.logger.error("Grid size is required")
             raise ValueError("Grid size is required")
+        grid_size = int(grid_size)
         
         if num_canvas is None:
             current_app.logger.error("Number of canvas is required")
             raise ValueError("Number of canvas is required")
-        
+        num_canvas = int(num_canvas)
+
         search_service.set_agent(agent)
         search_service.init_params(
             **data

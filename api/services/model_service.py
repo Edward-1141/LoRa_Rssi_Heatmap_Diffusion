@@ -21,44 +21,41 @@ class ModelService:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             
-        try:
-            if model_version not in HEATMAP_MODEL_CONFIG['model_types']:
-                raise ValueError(f"Unsupported model version: {model_version}")
-            
-            model_config = HEATMAP_MODEL_CONFIG['model_types'][model_version]
-            checkpoint_path = model_config['checkpoint_path']
-            model_class = model_config['model_class']
-            model_params = model_config['params']
+        
+        if model_version not in HEATMAP_MODEL_CONFIG['model_types']:
+            raise ValueError(f"Unsupported model version: \"{model_version}\"")
+        
+        model_config = HEATMAP_MODEL_CONFIG['model_types'][model_version]
+        checkpoint_path = model_config['checkpoint_path']
+        model_class = model_config['model_class']
+        model_params = model_config['params']
 
-            # Import the model class
-            module_name = model_config['module_name']
-            module = importlib.import_module(f"model.{module_name}")
-            model_class = getattr(module, model_class)
-            model = model_class(**model_params)
-            
-            # Load the checkpoint
-            current_app.logger.info(f"Loading checkpoint from {checkpoint_path}")
-            checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
-            
-            # Initialize DDPM
-            ddpm = DDPM(
-                nn_model=model,
-                betas=HEATMAP_MODEL_CONFIG['ddpm_params']['betas'],
-                n_T=HEATMAP_MODEL_CONFIG['ddpm_params']['n_T'],
-                drop_prob=HEATMAP_MODEL_CONFIG['ddpm_params']['drop_prob'],
-                device=self.device
-            )
-            
-            # Load state dict
-            ddpm.load_state_dict(checkpoint['model_state_dict'])
-            ddpm.eval()
-            
-            # Cache model
-            self.models[model_version] = ddpm
-            return ddpm
-            
-        except Exception as e:
-            raise
+        # Import the model class
+        module_name = model_config['module_name']
+        module = importlib.import_module(f"model.{module_name}")
+        model_class = getattr(module, model_class)
+        model = model_class(**model_params)
+        
+        # Load the checkpoint
+        current_app.logger.info(f"Loading checkpoint from {checkpoint_path}")
+        checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
+        
+        # Initialize DDPM
+        ddpm = DDPM(
+            nn_model=model,
+            betas=HEATMAP_MODEL_CONFIG['ddpm_params']['betas'],
+            n_T=HEATMAP_MODEL_CONFIG['ddpm_params']['n_T'],
+            drop_prob=HEATMAP_MODEL_CONFIG['ddpm_params']['drop_prob'],
+            device=self.device
+        )
+        
+        # Load state dict
+        ddpm.load_state_dict(checkpoint['model_state_dict'])
+        ddpm.eval()
+        
+        # Cache model
+        self.models[model_version] = ddpm
+        return ddpm
 
     def get_available_models(self):
         """Get a list of available trained models"""

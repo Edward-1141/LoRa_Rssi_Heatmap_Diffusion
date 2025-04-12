@@ -54,7 +54,6 @@ class SearchService:
         self.start_row = int(x / self.grid_size) # -self.num_canvas // 2 - self.grid_size // 2
         self.start_col = int(y / self.grid_size) # -self.num_canvas // 2 - self.grid_size // 2
         self.agent.set_loc([self.start_row, self.start_col])
-        # self.agent.set_loc([0, 0])
         self.demo_data["current_loc_idx"] = [self.start_row, self.start_col]
 
         self.ready = True
@@ -84,8 +83,7 @@ class SearchService:
         self.agent = agent_class(**agent_config['params'])
         self.agent_type = agent_type
         self.heatmap_model_needed = agent_config['heatmap-model-needed']
-        self.ready = False  # Reset readiness when changing agent
-        self.rssi_history = []  # Clear RSSI history when changing agent
+        self.reset()
 
     def reset(self):
         """
@@ -157,6 +155,8 @@ class SearchService:
         if self.heatmap_model_needed:
             # Check the grid size and the number of canvas to match with the heatmap model output
             heatmap_model_version = kwargs.get('model_version', 'v1') # TODO: Default based on config instead of hardcoding
+            if heatmap_model_version not in HEATMAP_MODEL_CONFIG['model_types']:
+                raise ValueError(f"Unsupported model version: \"{heatmap_model_version}\"")
             if HEATMAP_MODEL_CONFIG['model_types'][heatmap_model_version]['output_dim'] != [self.num_canvas, self.num_canvas]:
                 raise ValueError("The heatmap model output dimension doesn't match with the search area")
 
