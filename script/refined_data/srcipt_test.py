@@ -1,5 +1,10 @@
+import json
 import os
 import sys
+import dotenv
+
+dotenv.load_dotenv()
+sys.path.append(os.getenv('DRONE_SEARCH_ROOT_DIR', '.'))
 
 import imageio
 import numpy as np
@@ -8,10 +13,10 @@ from torch.utils.data import DataLoader
 from torchvision.utils import make_grid, save_image
 import matplotlib.pyplot as plt
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))) # Temporary fix to include the app directory
 from model.dataset import load_data
 from model.context_unet import ContextUnetV2
 from model.ddpm import DDPM
+from script.refined_data.evalution_utils import evaluate_image_similarity_torch, plot_evaluation_metrics
 
 def recall_and_regenerate_test(
     checkpoint_path, 
@@ -21,11 +26,11 @@ def recall_and_regenerate_test(
     save_dir="output/refined_data/recall_images",
     heatmap_idx=0,
     conditions_size_list = np.arange(5, 11, 1),
-    
 ):
     torch.cuda.empty_cache()
 
     # Ensure save directory exists
+    save_dir = os.path.join(save_dir, f"heatmap_{heatmap_idx}")
     os.makedirs(save_dir, exist_ok=True)
 
     # Load the checkpoint on CPU first
@@ -118,6 +123,13 @@ def recall_and_regenerate_test(
         guide_w=guidew
     )
 
+    # Evaluate the generated images
+    metrics = evaluate_image_similarity_torch(gt=heatmap, pred=x_gen_batch)
+    plot_evaluation_metrics(metrics, save_path=os.path.join(save_dir, f"heatmap_{heatmap_idx}_metrics.png"), extend_x_axis = conditions_size_list)
+
+    with open(os.path.join(save_dir, f"heatmap_{heatmap_idx}_metrics.json"), "w") as f:
+        json.dump(metrics, f, indent=4)
+
     # Process and store results
     for i in range(len(conditions_size_list)):
         x_gen_cpu = x_gen_batch[i].cpu()
@@ -200,6 +212,8 @@ if __name__ == "__main__":
         save_dir="output/refined_data/recall_images",
         guidew=2.0,
         heatmap_idx=7,
-        # conditions_size_list=np.arange(5, 11, 1),
-        conditions_size_list=np.hstack([np.arange(1, 51, 5), np.arange(51, 401, 50)]).flatten(),
+        # conditions_size_list=np.arange(5, 8, 1),
+        conditions_size_list=np.hstack([np.arange(1, 51, 1), np.arange(51, 401, 50)]).flatten(),
+        # conditions_size_list=np.hstack([np.arange(1, 801, 50)]).flatten(),
+        # conditions_size_list=np.hstack([np.arange(1, 801, 20)]).flatten(),
     )
