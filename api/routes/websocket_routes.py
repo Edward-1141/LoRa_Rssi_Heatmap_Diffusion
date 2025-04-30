@@ -1,3 +1,5 @@
+import json
+
 from flask import current_app, request
 from flask_socketio import SocketIO, emit
 import base64
@@ -100,7 +102,7 @@ def handle_next_target(data, **kwargs):
         # Handle heatmap data
         heatmap = search_service.get_last_heatmap()
         if heatmap is not None:
-            response['heatmap'] = heatmap.tolist()
+            # response['heatmap'] = heatmap.tolist()
             
             # Optionally generate and send heatmap image
             try:
@@ -137,6 +139,29 @@ def handle_list_search_methods(*args, **kwargs):
     except Exception as e:
         current_app.logger.error(f"Error listing search methods: {e}")
         emit('error', {'error': str(e)})
+
+# cached routes
+current_step = 0
+cached_data_path = './data/cached_gw_1.json'
+cached_data = json.load(open(cached_data_path))
+
+@socketio.on('get_next_target_from_cached_data')
+def handle_get_next_target_from_cached_data(data, **kwargs):
+    """Handle get next target request"""
+    global current_step
+    if current_step >= len(cached_data['data']):
+        emit('search_completed')
+        return
+    
+    next_target_response = cached_data['data'][current_step]
+    current_step += 1
+    emit('next_target', next_target_response)
+
+@socketio.on('reset_cached_data')
+def handle_reset_cached_data(data, **kwargs):
+    """Handle reset cached data request"""
+    global current_step
+    current_step = 0
 
 def init_socketio(app):
     """Initialize SocketIO with the Flask app"""

@@ -132,6 +132,7 @@ class SearchService:
         plt.title('Predicted RSSI distribution')
         plt.xlabel('X (meters)')
         plt.ylabel('Y (meters)')
+        plt.scatter(0, 0, color='red', marker='x', s=100) # scatter the origin location for reference
         plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
         plt.close()
         buf.seek(0)
